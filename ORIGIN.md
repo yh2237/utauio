@@ -11,3 +11,5 @@
 UtauTTSのMIT Licenseと`Copyright (c) 2026 yh`を継承しています。パッケージ名と公開説明を整理し、独立した使用例・復号テスト・fuzz試験・CIを追加しています。
 
 UtauTTS固有の`SourceGroup`、音源選択、合成計画、ファイルキャッシュ、音源・モデル・辞書は含みません。
+
+`presamp/parse.go`はUtauTTS `f668c73`時点の`internal/voicebank/presamp.go`の解析処理から分離しました。分類・置換・語尾の意味を維持し、行・欄・aliasの全分割による一時配列をなくしています。ファイル探索とfrontendへの変換は含みません。
