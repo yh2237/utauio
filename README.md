@@ -66,7 +66,7 @@ go vet ./...
 go test ./oto -run '^$' -fuzz FuzzScan -fuzztime 10s
 ```
 
-CIではWindows・Linux・macOS、Go 1.25とstable、Go wasmビルドを確認します。v0系ではAPIを調整する可能性があるため、利用側はバージョンを固定してください。
+CIにはWindows・Linux・macOS、Go 1.25とstable、Go wasmビルドの検査を設定しています。公開バージョンは`v0.1.0`です。
 
 ## 出典とライセンス
 
