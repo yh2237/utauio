@@ -31,6 +31,7 @@ jobs:
       - run: go test ./oto -run '^$' -fuzz FuzzScan -fuzztime 10s
       - run: go test ./textdecode -run '^$' -fuzz FuzzDecode -fuzztime 10s
       - run: go test ./presamp -run '^$' -fuzz FuzzParse -fuzztime 10s
+      - run: go test ./prefixmap -run '^$' -fuzz FuzzScan -fuzztime 10s
   wasm:
     runs-on: ubuntu-latest
     steps:

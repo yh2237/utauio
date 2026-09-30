@@ -13,3 +13,5 @@ UtauTTSのMIT Licenseと`Copyright (c) 2026 yh`を継承しています。パッ
 UtauTTS固有の`SourceGroup`、音源選択、合成計画、ファイルキャッシュ、音源・モデル・辞書は含みません。
 
 `presamp/parse.go`はUtauTTS `f668c73`時点の`internal/voicebank/presamp.go`の解析処理から分離しました。分類・置換・語尾の意味を維持し、行・欄・aliasの全分割による一時配列をなくしています。ファイル探索とfrontendへの変換は含みません。
+
+`prefixmap/parse.go`はUtauTTS `4fb5b9f`時点の`internal/voicebank/metadata.go`のprefix.map解析から分離しました。接辞の空欄・空白、音階名、記載順・不正行診断を保持し、行・欄の全分割を除いています。最寄り音階の選択は含みません。

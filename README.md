@@ -1,19 +1,20 @@
 # utauio
 
-UTAU音源のファイルを扱う小さなGoライブラリです。`oto.ini`・`presamp.ini`の解析と日本語テキストの復号を提供します。Go 1.25以上で利用できます。
+UTAU音源のファイルを扱う小さなGoライブラリです。`oto.ini`・`presamp.ini`・`prefix.map`の解析と日本語テキストの復号を提供します。Go 1.25以上で利用できます。
 
 UtauTTSから分離した処理を、合成エンジン・辞書・GUI・音源データに依存せず利用できます。
 
 ## インストール
 
 ```sh
-go get github.com/yh2237/utauio@v0.2.0
+go get github.com/yh2237/utauio@v0.3.0
 ```
 
 | パッケージ | 用途 | 依存 |
 | --- | --- | --- |
 | `oto` | 復号済みテキストの解析 | 標準ライブラリのみ |
 | `presamp` | 母音・子音分類、置換、語尾設定の解析 | 標準ライブラリのみ |
+| `prefixmap` | 音階名と接頭辞・接尾辞の解析 | 標準ライブラリのみ |
 | `textdecode` | UTF-8/BOM、UTF-16LE/BE、Shift_JISの復号 | `golang.org/x/text` |
 
 ## 使用例
@@ -73,6 +74,19 @@ importは`github.com/yh2237/utauio/oto`と`github.com/yh2237/utauio/textdecode`�
 
 実行例は`go run ./examples/presamp`です。
 
+## prefix.map
+
+`prefixmap.Scan(text, visit)`は復号済みの文字列から正常行を記載順に渡し、行番号付き診断を返します。
+
+- タブ区切りの音階名・接頭辞・接尾辞を使用します。音階名は周囲の空白を除いて大文字化します。
+- 接辞の空欄と空白を保持します。接尾辞欄は省略可能で、4欄目以降は無視します。
+- 重複する音階名も全て渡します。採用規則は呼び出し側で決めます。
+- 空行、`#`/`;`で始まるコメント行は無視します。タブのない不正行は診断へ回して後続行を読みます。
+- 音階名の音楽的な妥当性、ファイルの存在、原音選択は検査しません。空の音階名も既存形式の値として渡します。
+- visitorは必須です。ファイル探索・復号・書き戻しはこのパッケージに含みません。
+
+実行例は`go run ./examples/prefixmap`です。
+
 ## 検証
 
 ```sh
@@ -80,9 +94,10 @@ go test ./...
 go vet ./...
 go test ./oto -run '^$' -fuzz FuzzScan -fuzztime 10s
 go test ./presamp -run '^$' -fuzz FuzzParse -fuzztime 10s
+go test ./prefixmap -run '^$' -fuzz FuzzScan -fuzztime 10s
 ```
 
-CIにはWindows・Linux・macOS、Go 1.25とstable、Go wasmビルドの検査を設定しています。公開バージョンは`v0.2.0`です。
+CIにはWindows・Linux・macOS、Go 1.25とstable、Go wasmビルドの検査を設定しています。公開バージョンは`v0.3.0`です。
 
 ## 出典とライセンス
 
