@@ -1,13 +1,13 @@
 # utauio
 
-UTAU音源のファイルを扱う小さなGoライブラリです。`oto.ini`・`presamp.ini`・`prefix.map`の解析と日本語テキストの復号を提供します。Go 1.25以上で利用できます。
+UTAU音源のファイルを扱う小さなGoライブラリです。`oto.ini`・`presamp.ini`・`prefix.map`・`character.txt`・`character.yaml`の解析と日本語テキストの復号を提供します。Go 1.25以上で利用できます。
 
 UtauTTSから分離した処理を、合成エンジン・辞書・GUI・音源データに依存せず利用できます。
 
 ## インストール
 
 ```sh
-go get github.com/yh2237/utauio@v0.3.0
+go get github.com/yh2237/utauio@v0.4.0
 ```
 
 | パッケージ | 用途 | 依存 |
@@ -15,6 +15,7 @@ go get github.com/yh2237/utauio@v0.3.0
 | `oto` | 復号済みテキストの解析 | 標準ライブラリのみ |
 | `presamp` | 母音・子音分類、置換、語尾設定の解析 | 標準ライブラリのみ |
 | `prefixmap` | 音階名と接頭辞・接尾辞の解析 | 標準ライブラリのみ |
+| `character` | 名前、既定phonemizer、subbanksの限定的な解析 | 標準ライブラリのみ |
 | `textdecode` | UTF-8/BOM、UTF-16LE/BE、Shift_JISの復号 | `golang.org/x/text` |
 
 ## 使用例
@@ -87,6 +88,24 @@ importは`github.com/yh2237/utauio/oto`と`github.com/yh2237/utauio/textdecode`�
 
 実行例は`go run ./examples/prefixmap`です。
 
+## character.txt・character.yaml
+
+`character`パッケージは`v0.4.0`から利用できます。
+
+`character.ParseText(text)`は名前を返します。`name`の大文字小文字を区別せず、周囲の空白を除きます。重複時は最後の非空値を採用します。名前以外の項目は無視します。
+
+`character.ParseYAML(text)`は`YAML`と行番号付き診断を返します。
+
+- UtauTTSから継承した限定的な表記を扱います。完全なYAMLパーサーではなく、アンカー・複数行文字列・任意のmappingには対応しません。
+- `subbanks:`以降の`- color:`で項目を開始し、`color`・`prefix`・`suffix`・`tone_ranges`を記載順に読みます。これらのキーは大文字小文字を区別します。
+- 音域は`C3-C5`等の両端を含む範囲で、ブロック形式のリストと`[C3-C5, Db4-F#4]`形式を扱います。戻り値はMIDI音階番号です。不正・逆順の音域を診断へ回し、後続を読み続けます。
+- 有効な音域がない項目は`Low=-1073741824`、`High=1073741823`とします。これは従来の全音域指定を保つ値です。
+- subbankのスカラーはGo形式の二重引用符と、単一引用符内の`''`を扱います。引用符外で空白の後に置かれた`#`はコメントとして除きます。
+- `default_phonemizer`は大文字小文字を区別せず、最初の値を採用します。従来の読込規則に合わせ、位置やインデントを検査せず、行末コメントも除きません。
+- 未知の項目は無視します。ファイル探索、復号、ID・パスの付与、音源選択、書き戻しは含みません。
+
+実行例は`go run ./examples/character`です。
+
 ## 検証
 
 ```sh
@@ -95,9 +114,10 @@ go vet ./...
 go test ./oto -run '^$' -fuzz FuzzScan -fuzztime 10s
 go test ./presamp -run '^$' -fuzz FuzzParse -fuzztime 10s
 go test ./prefixmap -run '^$' -fuzz FuzzScan -fuzztime 10s
+go test ./character -run '^$' -fuzz FuzzParse -fuzztime 10s
 ```
 
-CIにはWindows・Linux・macOS、Go 1.25とstable、Go wasmビルドの検査を設定しています。公開バージョンは`v0.3.0`です。
+CIにはWindows・Linux・macOS、Go 1.25とstable、Go wasmビルドの検査を設定しています。公開バージョンは`v0.4.0`です。
 
 ## 出典とライセンス
 
