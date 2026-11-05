@@ -30,6 +30,8 @@ func TestParseMalformedRowsUnknownSectionsAndEndFlags(t *testing.T) {
 func FuzzParse(f *testing.F) {
 	f.Add("[VOWEL]\na=a=あ,い=100\n")
 	f.Add("[ENDTYPE999999999999999999999]\na\n[ENDFLAG]\n-1\n")
+	f.Add("[CONSONANT]\nk=か,き=0\n[REPLACE]\nx=1=2\n[ENDTYPE2]\nb\n[ENDTYPE1]\na\n[ENDFLAG]\n1\n")
+	f.Add("[VOWEL]\na=a=あ\na=b=い\n")
 	f.Fuzz(func(t *testing.T, text string) {
 		if len(text) > 65536 {
 			t.Skip()

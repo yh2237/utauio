@@ -21,6 +21,8 @@ func TestScanPreservesAffixesOrderAndDiagnostics(t *testing.T) {
 func FuzzScan(f *testing.F) {
 	f.Add("C4\t\t_C4\n")
 	f.Add("bad\n\tX\tY\r\n")
+	f.Add("C4\tpre\tsuf\tignored\nC4\tpre2\tsuf2\n")
+	f.Add("\tX\tY\n")
 	f.Fuzz(func(t *testing.T, text string) {
 		if len(text) > 65536 {
 			t.Skip()
