@@ -1,6 +1,7 @@
 package textdecode
 
 import (
+	"bytes"
 	"encoding/binary"
 	"testing"
 	"unicode/utf16"
@@ -39,8 +40,51 @@ func TestDecodeSupportedEncodings(t *testing.T) {
 	}
 }
 
+func TestDecodeUTF8BOMBeforeShiftJIS(t *testing.T) {
+	text := "あ.wav=あ,0,100,-20,30,10\r\n"
+	shift, err := japanese.ShiftJIS.NewEncoder().Bytes([]byte(text))
+	if err != nil {
+		t.Fatal(err)
+	}
+	data := append([]byte{0xef, 0xbb, 0xbf}, shift...)
+	got, encoding, err := Decode(data)
+	if err != nil || got != text || encoding != "Shift_JIS" {
+		t.Fatalf("Decode = %q, %q, %v", got, encoding, err)
+	}
+}
+
+var decodeAllocationSink string
+
+func TestDecodeUTF8Allocations(t *testing.T) {
+	base := bytes.Repeat([]byte("原音.wav=あ,0,0,-100,10,5\n"), 8)
+	if len(base) != 232 {
+		t.Fatalf("fixture length = %d, want 232", len(base))
+	}
+	for _, tc := range []struct {
+		name string
+		data []byte
+	}{
+		{"UTF8", base},
+		{"UTF8 BOM", append([]byte{0xef, 0xbb, 0xbf}, base...)},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			if text, encoding, err := Decode(tc.data); err != nil || encoding != "UTF-8" || text == "" {
+				t.Fatalf("Decode = %q, %q, %v", text, encoding, err)
+			}
+			allocs := testing.AllocsPerRun(100, func() {
+				text, _, _ := Decode(tc.data)
+				decodeAllocationSink = text
+			})
+			if allocs != 1 {
+				t.Fatalf("Decode allocated %.1f times per call, want 1", allocs)
+			}
+		})
+	}
+}
+
 func FuzzDecode(f *testing.F) {
-	for _, data := range [][]byte{{}, []byte("あ.wav"), {0xff, 0xfe}, {0xfe, 0xff, 0}, {0x82, 0xa0}} {
+	for _, data := range [][]byte{{}, []byte("あ.wav"), {0xff, 0xfe}, {0xfe, 0xff, 0}, {0x82, 0xa0},
+		[]byte("\ufeffあ.wav"), {0xff, 0xfe, 0x42, 0x30}, {0xfe, 0xff, 0x30, 0x42}} {
 		f.Add(data)
 	}
 	f.Fuzz(func(t *testing.T, data []byte) {

@@ -2,15 +2,17 @@
 package textdecode
 
 import (
+	"bytes"
 	"encoding/binary"
 	"fmt"
-	"strings"
 	"unicode/utf16"
 	"unicode/utf8"
 
 	"golang.org/x/text/encoding/japanese"
 	"golang.org/x/text/transform"
 )
+
+var utf8BOM = []byte{0xef, 0xbb, 0xbf}
 
 // DecodeはUTF-16 BOM、UTF-8、Shift_JISの順に判定し、文字コード名と共に返す。
 func Decode(data []byte) (string, string, error) {
@@ -31,7 +33,7 @@ func Decode(data []byte) (string, string, error) {
 		}
 		return string(utf16.Decode(units)), encoding, nil
 	}
-	data = []byte(strings.TrimPrefix(string(data), "\ufeff"))
+	data = bytes.TrimPrefix(data, utf8BOM)
 	if utf8.Valid(data) {
 		return string(data), "UTF-8", nil
 	}
