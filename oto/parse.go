@@ -68,9 +68,6 @@ func parseLine(line, baseDir string) (Entry, error) {
 		return Entry{}, fmt.Errorf("expected alias and 5 parameters, got %d fields", len(fields))
 	}
 	alias := strings.TrimSpace(fields[0])
-	if alias == "" {
-		alias = strings.TrimSuffix(filepath.Base(filename), filepath.Ext(filename))
-	}
 	var values [5]float64
 	for i := range values {
 		value := strings.TrimSpace(fields[i+1])
@@ -87,8 +84,13 @@ func parseLine(line, baseDir string) (Entry, error) {
 		values[i] = parsed
 	}
 	fullPath := filename
+	aliasPath := filename
 	if !filepath.IsAbs(filename) {
-		fullPath = filepath.Join(baseDir, filepath.FromSlash(strings.ReplaceAll(filename, "\\", "/")))
+		aliasPath = filepath.FromSlash(strings.ReplaceAll(filename, "\\", "/"))
+		fullPath = filepath.Join(baseDir, aliasPath)
+	}
+	if alias == "" {
+		alias = strings.TrimSuffix(filepath.Base(aliasPath), filepath.Ext(aliasPath))
 	}
 	return Entry{Filename: filepath.Clean(fullPath), Alias: alias,
 		Offset: values[0], Fixed: values[1], Blank: values[2], Preutterance: values[3], Overlap: values[4]}, nil

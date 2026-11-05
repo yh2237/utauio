@@ -49,8 +49,17 @@ func TestScanRejectsNonFiniteAndMissingParameters(t *testing.T) {
 	}
 }
 
+func TestScanCompletesAliasFromWindowsStylePath(t *testing.T) {
+	var entries []Entry
+	_, err := Scan(strings.NewReader("sub\\a.wav=,0,0,0,0,0\n"), "bank", func(entry Entry) { entries = append(entries, entry) })
+	if err != nil || len(entries) != 1 || entries[0].Alias != "a" {
+		t.Fatalf("entries=%+v err=%v", entries, err)
+	}
+}
+
 func FuzzScan(f *testing.F) {
-	for _, text := range []string{"", "a.wav=あ,0,100,-20,30,10\n", "broken\r\n", "a.wav=a,NaN,0,0,0,0"} {
+	for _, text := range []string{"", "a.wav=あ,0,100,-20,30,10\n", "broken\r\n", "a.wav=a,NaN,0,0,0,0",
+		"a.wav=,0,0,0,0,0\na.wav=,0,0,0,0,0\n", "a.wav=a,0,0,0,0,0,extra\n"} {
 		f.Add(text)
 	}
 	f.Fuzz(func(t *testing.T, text string) {
