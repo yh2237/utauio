@@ -229,18 +229,51 @@ func toneNumber(tone string) (int, bool) {
 func stripComment(value string) string {
 	quoted := byte(0)
 	for index := 0; index < len(value); index++ {
-		switch value[index] {
-		case '\'', '"':
-			if quoted == 0 {
-				quoted = value[index]
-			} else if quoted == value[index] {
+		character := value[index]
+		if quoted != 0 {
+			if quoted == '"' {
+				if character == '\\' {
+					index++
+					continue
+				}
+				if character == '"' {
+					quoted = 0
+				}
+				continue
+			}
+			if character == '\'' {
+				if index+1 < len(value) && value[index+1] == '\'' {
+					index++
+					continue
+				}
 				quoted = 0
 			}
+			continue
+		}
+		switch character {
+		case '\'', '"':
+			if startsQuotedScalar(value, index) {
+				quoted = character
+			}
 		case '#':
-			if quoted == 0 && (index == 0 || value[index-1] == ' ' || value[index-1] == '\t') {
+			if index == 0 || value[index-1] == ' ' || value[index-1] == '\t' {
 				return value[:index]
 			}
 		}
 	}
 	return value
+}
+
+func startsQuotedScalar(value string, index int) bool {
+	for index--; index >= 0; index-- {
+		switch value[index] {
+		case ' ', '\t':
+			continue
+		case ':', '-', '[', ',', '{':
+			return true
+		default:
+			return false
+		}
+	}
+	return true
 }

@@ -59,8 +59,30 @@ func TestParseYAMLCompatibilitySubset(t *testing.T) {
 	}
 }
 
+func TestParseYAMLCommentInsideEscapedQuote(t *testing.T) {
+	text := "subbanks:\n- color: test\n  prefix: \"a\\\" # b\"\n  suffix: \"c\\\"d\" # comment\n"
+	got, diagnostics := ParseYAML(text)
+	if len(diagnostics) != 0 || len(got.Subbanks) != 1 {
+		t.Fatalf("config=%+v diagnostics=%+v", got, diagnostics)
+	}
+	if got.Subbanks[0].Prefix != `a" # b` || got.Subbanks[0].Suffix != `c"d` {
+		t.Fatalf("subbank=%+v", got.Subbanks[0])
+	}
+}
+
+func TestParseYAMLCommentAfterPlainApostrophe(t *testing.T) {
+	got, diagnostics := ParseYAML("subbanks:\n- color: test\n  prefix: it's # comment\n  suffix: 'it''s # x'\n")
+	if len(diagnostics) != 0 || len(got.Subbanks) != 1 {
+		t.Fatalf("config=%+v diagnostics=%+v", got, diagnostics)
+	}
+	if got.Subbanks[0].Prefix != "it's" || got.Subbanks[0].Suffix != "it's # x" {
+		t.Fatalf("subbank=%+v", got.Subbanks[0])
+	}
+}
+
 func FuzzParse(f *testing.F) {
-	for _, text := range []string{"", "name=音源", "subbanks:\n- color: ''\n  tone_ranges: [C3-C5]\n", "subbanks:\n- color: test\n  tone_ranges: [C#-D4, bad]\n"} {
+	for _, text := range []string{"", "name=音源", "subbanks:\n- color: ''\n  tone_ranges: [C3-C5]\n", "subbanks:\n- color: test\n  tone_ranges: [C#-D4, bad]\n",
+		"default_phonemizer: 'ja-kana'\nsubbanks:\n- color: test\n  prefix: \"a\\\" # b\"\n"} {
 		f.Add(text)
 	}
 	f.Fuzz(func(t *testing.T, text string) {
